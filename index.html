@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dialect × Education Review</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      min-height: 100vh;
+    }
+    .container { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+    h1 { font-size: 1.5rem; margin-bottom: 4px; color: #0f172a; }
+    .subtitle { color: #64748b; font-size: 0.875rem; margin-bottom: 20px; }
+    .controls { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .control { display: flex; flex-direction: column; gap: 4px; }
+    .control label {
+      font-size: 0.75rem; color: #64748b;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    select {
+      background: #fff; border: 1px solid #cbd5e1; color: #1e293b;
+      padding: 8px 12px; border-radius: 6px; font-size: 0.875rem;
+      min-width: 140px; cursor: pointer;
+    }
+    select:hover { border-color: #94a3b8; }
+    select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px #93c5fd44; }
+    .chat {
+      background: #fff; border: 1px solid #e2e8f0;
+      border-radius: 12px; padding: 20px; margin-bottom: 20px;
+      min-height: 200px; box-shadow: 0 1px 3px #0000000a;
+    }
+    .msg { margin-bottom: 16px; display: flex; }
+    .msg.user { justify-content: flex-end; }
+    .msg.assistant { justify-content: flex-start; }
+    .bubble {
+      max-width: 85%; padding: 12px 16px; border-radius: 12px;
+      line-height: 1.65; font-size: 0.95rem;
+    }
+    .msg.user .bubble {
+      background: #dbeafe; color: #1e3a8a;
+      border: 1px solid #bfdbfe; border-bottom-right-radius: 4px;
+    }
+    .msg.assistant .bubble {
+      background: #f1f5f9; color: #1e293b;
+      border: 1px solid #e2e8f0; border-bottom-left-radius: 4px;
+    }
+    .role-tag {
+      font-size: 0.65rem; text-transform: uppercase;
+      letter-spacing: 0.05em; margin-bottom: 8px;
+      opacity: 0.65; font-weight: 600;
+    }
+    .msg-body p { margin: 0 0 0.75em 0; }
+    .msg-body p:last-child { margin-bottom: 0; }
+    .msg-body strong { font-weight: 600; color: inherit; }
+    .msg-body ul, .msg-body ol { margin: 0.5em 0 0.75em 1.25em; }
+    .msg-body li { margin-bottom: 0.35em; }
+    .msg-body h3, .msg-body h4 {
+      font-size: 0.95rem; font-weight: 600;
+      margin: 0.75em 0 0.35em 0;
+    }
+    .meta {
+      background: #fff; border-radius: 8px; padding: 16px;
+      border: 1px solid #e2e8f0; box-shadow: 0 1px 3px #0000000a;
+    }
+    .meta h3 {
+      font-size: 0.8rem; color: #64748b;
+      text-transform: uppercase; margin-bottom: 8px;
+    }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 8px;
+    }
+    .meta-item { font-size: 0.8rem; }
+    .meta-item strong { color: #64748b; }
+    .panel {
+      background: #fff; border-radius: 8px; margin-top: 12px;
+      border: 1px solid #e2e8f0; box-shadow: 0 1px 3px #0000000a;
+    }
+    .panel summary {
+      padding: 12px 16px; cursor: pointer; font-weight: 600;
+      font-size: 0.85rem; color: #334155; list-style: none;
+    }
+    .panel summary::-webkit-details-marker { display: none; }
+    .panel summary::before { content: '▸ '; color: #64748b; }
+    .panel[open] summary::before { content: '▾ '; }
+    .panel-body {
+      padding: 0 16px 16px; font-size: 0.85rem; line-height: 1.6;
+      color: #334155; max-height: 420px; overflow-y: auto;
+      border-top: 1px solid #f1f5f9;
+    }
+    .panel-body .field { margin-bottom: 12px; }
+    .panel-body .field-label {
+      font-weight: 600; color: #64748b; font-size: 0.75rem;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      margin-bottom: 4px;
+    }
+    .rules-body { font-size: 0.82rem; }
+    .empty, .loading {
+      color: #94a3b8; text-align: center;
+      padding: 60px 20px; font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Dialect × Education Review</h1>
+    <div class="subtitle" id="subtitle">Loading...</div>
+
+    <div class="controls">
+      <div class="control">
+        <label>Language</label>
+        <select id="lang"></select>
+      </div>
+      <div class="control">
+        <label>Dialect</label>
+        <select id="dialect"></select>
+      </div>
+      <div class="control">
+        <label>Education Tier</label>
+        <select id="tier"></select>
+      </div>
+      <div class="control">
+        <label>Sample</label>
+        <select id="sample"></select>
+      </div>
+    </div>
+
+    <div class="chat" id="chat">
+      <div class="loading">Loading conversations...</div>
+    </div>
+
+    <div class="meta" id="meta"></div>
+    <div id="scenario-panel"></div>
+    <div id="rules-panel"></div>
+  </div>
+
+  <script>
+    let DATA = [];
+    let RULES = {};
+
+    function escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    /** Turn plain text + light markdown into safe HTML with paragraphs. */
+    function formatMessage(text) {
+      let s = escapeHtml(text.trim());
+
+      // **bold**
+      s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      // *italic* (single asterisk, not already bold)
+      s = s.replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g, '<em>$1</em>');
+
+      // Split into paragraphs on blank lines
+      const blocks = s.split(/\n{2,}/);
+      const html = blocks.map(block => {
+        const lines = block.split('\n');
+        const parts = [];
+        let listItems = [];
+        let listOrdered = false;
+
+        function flushList() {
+          if (!listItems.length) return;
+          const tag = listOrdered ? 'ol' : 'ul';
+          parts.push(`<${tag}>${listItems.map(li => `<li>${li}</li>`).join('')}</${tag}>`);
+          listItems = [];
+        }
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+
+          const olMatch = trimmed.match(/^\d+\.\s+(.+)$/);
+          const ulMatch = trimmed.match(/^[-*•]\s+(.+)$/);
+
+          if (olMatch) {
+            if (listItems.length && !listOrdered) flushList();
+            listOrdered = true;
+            listItems.push(olMatch[1]);
+          } else if (ulMatch) {
+            if (listItems.length && listOrdered) flushList();
+            listOrdered = false;
+            listItems.push(ulMatch[1]);
+          } else {
+            flushList();
+            if (/^#{1,3}\s+/.test(trimmed)) {
+              const heading = trimmed.replace(/^#{1,3}\s+/, '');
+              parts.push(`<h4>${heading}</h4>`);
+            } else {
+              parts.push(`<p>${trimmed}</p>`);
+            }
+          }
+        }
+        flushList();
+        return parts.join('');
+      }).join('');
+
+      return `<div class="msg-body">${html || '<p></p>'}</div>`;
+    }
+
+    function formatList(items) {
+      if (!items || !items.length) return '';
+      if (typeof items[0] === 'string') {
+        return '<ul>' + items.map(i => `<li>${escapeHtml(i)}</li>`).join('') + '</ul>';
+      }
+      return '<ul>' + items.map(i => {
+        const text = typeof i === 'object' ? JSON.stringify(i) : String(i);
+        return `<li>${escapeHtml(text)}</li>`;
+      }).join('') + '</ul>';
+    }
+
+    function formatScenario(scenario) {
+      const emo = scenario.emotional_state || {};
+      const dyn = scenario.conversation_dynamics || {};
+      const emoLines = Object.entries(emo)
+        .filter(([, v]) => v != null && v !== '')
+        .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
+        .join('\n');
+      const dynLines = Object.entries(dyn)
+        .filter(([, v]) => v != null && v !== '')
+        .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
+        .join('\n');
+
+      let html = '';
+      const fields = [
+        ['Who you are', scenario.who_you_are],
+        ['Core context / problem', scenario.core_context],
+        ['History with this problem', scenario.history],
+      ];
+      for (const [label, val] of fields) {
+        if (val) html += `<div class="field"><div class="field-label">${label}</div>${formatMessage(val)}</div>`;
+      }
+      if (scenario.practical_constraints?.length) {
+        html += `<div class="field"><div class="field-label">Practical constraints</div>${formatList(scenario.practical_constraints)}</div>`;
+      }
+      if (scenario.success_criteria?.length) {
+        html += `<div class="field"><div class="field-label">Success criteria</div>${formatList(scenario.success_criteria)}</div>`;
+      }
+      if (emoLines) {
+        html += `<div class="field"><div class="field-label">Emotional state</div>${formatMessage(emoLines)}</div>`;
+      }
+      if (dynLines) {
+        html += `<div class="field"><div class="field-label">Conversation dynamics</div>${formatMessage(dynLines)}</div>`;
+      }
+      return html || '<p class="empty">No scenario details stored.</p>';
+    }
+
+    async function init() {
+      const [dataResp, rulesResp] = await Promise.all([
+        fetch('/data.json'),
+        fetch('/rules_by_variety.json'),
+      ]);
+      DATA = await dataResp.json();
+      RULES = await rulesResp.json();
+      const nVar = new Set(DATA.map(c => c.language + '|' + c.variety_id)).size;
+      document.getElementById('subtitle').textContent =
+        `${DATA.length} conversations · ${nVar} dialects · 3 tiers × 4 samples each`;
+      populateLanguages();
+    }
+
+    function populateLanguages() {
+      const langs = [...new Set(DATA.map(c => c.language))].sort();
+      const sel = document.getElementById('lang');
+      sel.innerHTML = langs.map(l => `<option value="${l}">${l}</option>`).join('');
+      sel.onchange = () => { populateDialects(); };
+      populateDialects();
+    }
+
+    function populateDialects() {
+      const lang = document.getElementById('lang').value;
+      const varieties = {};
+      DATA.filter(c => c.language === lang).forEach(c => { varieties[c.variety_id] = c.variety_name; });
+      const sel = document.getElementById('dialect');
+      sel.innerHTML = Object.entries(varieties)
+        .map(([id, name]) => `<option value="${id}">${name}</option>`).join('');
+      sel.onchange = () => { populateTiers(); };
+      populateTiers();
+    }
+
+    function populateTiers() {
+      const lang = document.getElementById('lang').value;
+      const vid = document.getElementById('dialect').value;
+      const tiers = DATA.filter(c => c.language === lang && c.variety_id === vid)
+        .map(c => c.education_tier);
+      const order = ['low', 'mid', 'high'];
+      const available = order.filter(t => tiers.includes(t));
+      const sel = document.getElementById('tier');
+      sel.innerHTML = available.map(t => `<option value="${t}">${t}</option>`).join('');
+      sel.onchange = () => { populateSamples(); };
+      populateSamples();
+    }
+
+    function populateSamples() {
+      const lang = document.getElementById('lang').value;
+      const vid = document.getElementById('dialect').value;
+      const tier = document.getElementById('tier').value;
+      const slots = DATA.filter(c =>
+        c.language === lang && c.variety_id === vid && c.education_tier === tier
+      ).map(c => c.tier_slot ?? 0).sort((a, b) => a - b);
+      const sel = document.getElementById('sample');
+      sel.innerHTML = slots.map(s => `<option value="${s}">#${s + 1}</option>`).join('');
+      sel.onchange = render;
+      render();
+    }
+
+    function render() {
+      const lang = document.getElementById('lang').value;
+      const vid = document.getElementById('dialect').value;
+      const tier = document.getElementById('tier').value;
+      const slot = parseInt(document.getElementById('sample').value, 10) || 0;
+      const conv = DATA.find(c =>
+        c.language === lang && c.variety_id === vid &&
+        c.education_tier === tier && (c.tier_slot ?? 0) === slot
+      );
+
+      const chatEl = document.getElementById('chat');
+      const metaEl = document.getElementById('meta');
+      const scenarioEl = document.getElementById('scenario-panel');
+      const rulesEl = document.getElementById('rules-panel');
+
+      if (!conv) {
+        chatEl.innerHTML = '<div class="empty">No conversation found for this combination.</div>';
+        metaEl.innerHTML = '';
+        scenarioEl.innerHTML = '';
+        rulesEl.innerHTML = '';
+        return;
+      }
+
+      chatEl.innerHTML = conv.conversation.map(msg => {
+        const roleLabel = msg.role === 'user'
+          ? `User (${escapeHtml(conv.variety_name)})`
+          : 'AI Assistant';
+        return `
+        <div class="msg ${msg.role}">
+          <div class="bubble">
+            <div class="role-tag">${roleLabel}</div>
+            ${formatMessage(msg.content)}
+          </div>
+        </div>`;
+      }).join('');
+
+      const emo = conv.scenario.emotional_state || {};
+      metaEl.innerHTML = `
+        <h3>Scenario & Persona</h3>
+        <div class="meta-grid">
+          <div class="meta-item"><strong>Variety:</strong> ${escapeHtml(conv.variety_name)}</div>
+          <div class="meta-item"><strong>Tier:</strong> ${escapeHtml(conv.education_tier_label)} (sample #${(conv.tier_slot ?? 0) + 1})</div>
+          <div class="meta-item"><strong>Persona:</strong> ${escapeHtml(conv.sex)} · ${escapeHtml(conv.occupation)}</div>
+          <div class="meta-item"><strong>Education:</strong> ${escapeHtml(conv.education_level)}</div>
+          <div class="meta-item"><strong>Location:</strong> ${escapeHtml(conv.zone)}, ${escapeHtml(conv.state)}</div>
+          <div class="meta-item"><strong>Life sphere:</strong> ${escapeHtml(conv.life_sphere)}</div>
+          <div class="meta-item"><strong>Intent:</strong> ${escapeHtml(conv.intent)}</div>
+          <div class="meta-item"><strong>Emotion:</strong> ${escapeHtml(emo.primary_emotion || '')} (${escapeHtml(emo.intensity || '')})</div>
+        </div>
+      `;
+
+      scenarioEl.innerHTML = `
+        <details class="panel" open>
+          <summary>Scenario description</summary>
+          <div class="panel-body">${formatScenario(conv.scenario || {})}</div>
+        </details>`;
+
+      const rulesKey = `${conv.language}|${conv.variety_id}`;
+      const rulesText = RULES[rulesKey] || '';
+      rulesEl.innerHTML = `
+        <details class="panel" open>
+          <summary>Dialect rules — ${escapeHtml(conv.variety_name)}</summary>
+          <div class="panel-body rules-body">${
+            rulesText ? formatMessage(rulesText) : '<p class="empty">No rules found for this variety.</p>'
+          }</div>
+        </details>`;
+    }
+
+    init();
+  </script>
+</body>
+</html>
