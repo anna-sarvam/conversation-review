@@ -255,15 +255,24 @@
     }
 
     async function init() {
-      const [dataResp, rulesResp] = await Promise.all([
-        fetch('/data.json'),
-        fetch('/rules_by_variety.json'),
-      ]);
-      DATA = await dataResp.json();
-      RULES = await rulesResp.json();
+      document.getElementById('subtitle').textContent = 'Loading conversations...';
+      try {
+        const base = document.baseURI.replace(/\/[^/]*$/, '/');
+        const [dataResp, rulesResp] = await Promise.all([
+          fetch(base + 'data.json'),
+          fetch(base + 'rules_by_variety.json'),
+        ]);
+        DATA = await dataResp.json();
+        RULES = await rulesResp.json();
+      } catch (e) {
+        document.getElementById('subtitle').textContent = 'Failed to load data: ' + e.message;
+        return;
+      }
       const nVar = new Set(DATA.map(c => c.language + '|' + c.variety_id)).size;
+      const nTiers = new Set(DATA.map(c => c.education_tier)).size;
       document.getElementById('subtitle').textContent =
-        `${DATA.length} conversations · ${nVar} dialects · 3 tiers × 4 samples each`;
+        `${DATA.length} conversations · ${nVar} dialects · ${nTiers} education tiers`;
+      document.getElementById('chat').innerHTML = '';
       populateLanguages();
     }
 
