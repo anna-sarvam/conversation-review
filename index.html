@@ -141,6 +141,14 @@
         </select>
       </div>
       <div class="control">
+        <label>Grounded</label>
+        <select id="filter-grounded">
+          <option value="all">All</option>
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+      </div>
+      <div class="control">
         <label>Sample</label>
         <select id="sample"></select>
       </div>
@@ -292,17 +300,21 @@
       // Wire up filter change handlers
       document.getElementById('filter-lang-switch').onchange = () => populateLanguages();
       document.getElementById('filter-topic-switch').onchange = () => populateLanguages();
+      document.getElementById('filter-grounded').onchange = () => populateLanguages();
       populateLanguages();
     }
 
     function getFiltered() {
       const ls = document.getElementById('filter-lang-switch').value;
       const ts = document.getElementById('filter-topic-switch').value;
+      const gr = document.getElementById('filter-grounded').value;
       return DATA.filter(c => {
         if (ls === 'yes' && !c.has_language_switch) return false;
         if (ls === 'no' && c.has_language_switch) return false;
         if (ts === 'yes' && !c.has_topic_transition) return false;
         if (ts === 'no' && c.has_topic_transition) return false;
+        if (gr === 'yes' && !c.is_grounded) return false;
+        if (gr === 'no' && c.is_grounded) return false;
         return true;
       });
     }
@@ -422,6 +434,9 @@
           <div class="meta-item"><strong>Emotion:</strong> ${escapeHtml(emo.primary_emotion || '')} (${escapeHtml(emo.intensity || '')})</div>
           <div class="meta-item"><strong>Lang switch:</strong> ${escapeHtml(lsText)}</div>
           <div class="meta-item"><strong>Topic transitions:</strong> ${escapeHtml(ttText)}</div>
+          <div class="meta-item"><strong>Grounded:</strong> ${conv.is_grounded
+            ? escapeHtml((conv.grounding.sub_category || '') + ' / ' + (conv.grounding.book_name || ''))
+            : 'No'}</div>
         </div>
       `;
 
