@@ -125,6 +125,22 @@
         <select id="tier"></select>
       </div>
       <div class="control">
+        <label>Lang Switch</label>
+        <select id="filter-lang-switch">
+          <option value="all">All</option>
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Topic Switch</label>
+        <select id="filter-topic-switch">
+          <option value="all">All</option>
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+      </div>
+      <div class="control">
         <label>Sample</label>
         <select id="sample"></select>
       </div>
@@ -273,50 +289,77 @@
       document.getElementById('subtitle').textContent =
         `${DATA.length} conversations · ${nVar} dialects · ${nTiers} education tiers`;
       document.getElementById('chat').innerHTML = '';
+      // Wire up filter change handlers
+      document.getElementById('filter-lang-switch').onchange = () => populateLanguages();
+      document.getElementById('filter-topic-switch').onchange = () => populateLanguages();
       populateLanguages();
     }
 
+    function getFiltered() {
+      const ls = document.getElementById('filter-lang-switch').value;
+      const ts = document.getElementById('filter-topic-switch').value;
+      return DATA.filter(c => {
+        if (ls === 'yes' && !c.has_language_switch) return false;
+        if (ls === 'no' && c.has_language_switch) return false;
+        if (ts === 'yes' && !c.has_topic_transition) return false;
+        if (ts === 'no' && c.has_topic_transition) return false;
+        return true;
+      });
+    }
+
     function populateLanguages() {
-      const langs = [...new Set(DATA.map(c => c.language))].sort();
+      const filtered = getFiltered();
+      const langs = [...new Set(filtered.map(c => c.language))].sort();
       const sel = document.getElementById('lang');
+      const prev = sel.value;
       sel.innerHTML = langs.map(l => `<option value="${l}">${l}</option>`).join('');
+      if (langs.includes(prev)) sel.value = prev;
       sel.onchange = () => { populateDialects(); };
       populateDialects();
     }
 
     function populateDialects() {
+      const filtered = getFiltered();
       const lang = document.getElementById('lang').value;
       const varieties = {};
-      DATA.filter(c => c.language === lang).forEach(c => { varieties[c.variety_id] = c.variety_name; });
+      filtered.filter(c => c.language === lang).forEach(c => { varieties[c.variety_id] = c.variety_name; });
       const sel = document.getElementById('dialect');
+      const prev = sel.value;
       sel.innerHTML = Object.entries(varieties)
         .map(([id, name]) => `<option value="${id}">${name}</option>`).join('');
+      if (varieties[prev]) sel.value = prev;
       sel.onchange = () => { populateTiers(); };
       populateTiers();
     }
 
     function populateTiers() {
+      const filtered = getFiltered();
       const lang = document.getElementById('lang').value;
       const vid = document.getElementById('dialect').value;
-      const tiers = DATA.filter(c => c.language === lang && c.variety_id === vid)
+      const tiers = filtered.filter(c => c.language === lang && c.variety_id === vid)
         .map(c => c.education_tier);
       const order = ['low', 'mid', 'high'];
       const available = order.filter(t => tiers.includes(t));
       const sel = document.getElementById('tier');
+      const prev = sel.value;
       sel.innerHTML = available.map(t => `<option value="${t}">${t}</option>`).join('');
+      if (available.includes(prev)) sel.value = prev;
       sel.onchange = () => { populateSamples(); };
       populateSamples();
     }
 
     function populateSamples() {
+      const filtered = getFiltered();
       const lang = document.getElementById('lang').value;
       const vid = document.getElementById('dialect').value;
       const tier = document.getElementById('tier').value;
-      const slots = DATA.filter(c =>
+      const slots = filtered.filter(c =>
         c.language === lang && c.variety_id === vid && c.education_tier === tier
       ).map(c => c.tier_slot ?? 0).sort((a, b) => a - b);
       const sel = document.getElementById('sample');
-      sel.innerHTML = slots.map(s => `<option value="${s}">#${s + 1}</option>`).join('');
+      sel.innerHTML = slots.length
+        ? slots.map(s => `<option value="${s}">#${s + 1}</option>`).join('')
+        : '<option value="">--</option>';
       sel.onchange = render;
       render();
     }
@@ -358,6 +401,14 @@
       }).join('');
 
       const emo = conv.scenario.emotional_state || {};
+      const lsEntries = Object.entries(conv.language_switches || {});
+      const lsText = lsEntries.length
+        ? lsEntries.filter(([,v]) => !v.is_switch_back).map(([t,v]) => `turn ${t} → ${v.lang}`).join(', ')
+        : 'None';
+      const ttList = conv.topic_transitions || [];
+      const ttText = ttList.length
+        ? ttList.map(t => `${t.trigger_turn_range || ''}: ${t.from_topic || ''} → ${t.to_topic || ''}`).join('; ')
+        : 'None';
       metaEl.innerHTML = `
         <h3>Scenario & Persona</h3>
         <div class="meta-grid">
@@ -369,6 +420,8 @@
           <div class="meta-item"><strong>Life sphere:</strong> ${escapeHtml(conv.life_sphere)}</div>
           <div class="meta-item"><strong>Intent:</strong> ${escapeHtml(conv.intent)}</div>
           <div class="meta-item"><strong>Emotion:</strong> ${escapeHtml(emo.primary_emotion || '')} (${escapeHtml(emo.intensity || '')})</div>
+          <div class="meta-item"><strong>Lang switch:</strong> ${escapeHtml(lsText)}</div>
+          <div class="meta-item"><strong>Topic transitions:</strong> ${escapeHtml(ttText)}</div>
         </div>
       `;
 
