@@ -1,463 +1,716 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dialect × Education Review</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #f8fafc;
-      color: #1e293b;
-      min-height: 100vh;
-    }
-    .container { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
-    h1 { font-size: 1.5rem; margin-bottom: 4px; color: #0f172a; }
-    .subtitle { color: #64748b; font-size: 0.875rem; margin-bottom: 20px; }
-    .controls { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-    .control { display: flex; flex-direction: column; gap: 4px; }
-    .control label {
-      font-size: 0.75rem; color: #64748b;
-      text-transform: uppercase; letter-spacing: 0.05em;
-    }
-    select {
-      background: #fff; border: 1px solid #cbd5e1; color: #1e293b;
-      padding: 8px 12px; border-radius: 6px; font-size: 0.875rem;
-      min-width: 140px; cursor: pointer;
-    }
-    select:hover { border-color: #94a3b8; }
-    select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px #93c5fd44; }
-    .chat {
-      background: #fff; border: 1px solid #e2e8f0;
-      border-radius: 12px; padding: 20px; margin-bottom: 20px;
-      min-height: 200px; box-shadow: 0 1px 3px #0000000a;
-    }
-    .msg { margin-bottom: 16px; display: flex; }
-    .msg.user { justify-content: flex-end; }
-    .msg.assistant { justify-content: flex-start; }
-    .bubble {
-      max-width: 85%; padding: 12px 16px; border-radius: 12px;
-      line-height: 1.65; font-size: 0.95rem;
-    }
-    .msg.user .bubble {
-      background: #dbeafe; color: #1e3a8a;
-      border: 1px solid #bfdbfe; border-bottom-right-radius: 4px;
-    }
-    .msg.assistant .bubble {
-      background: #f1f5f9; color: #1e293b;
-      border: 1px solid #e2e8f0; border-bottom-left-radius: 4px;
-    }
-    .role-tag {
-      font-size: 0.65rem; text-transform: uppercase;
-      letter-spacing: 0.05em; margin-bottom: 8px;
-      opacity: 0.65; font-weight: 600;
-    }
-    .msg-body p { margin: 0 0 0.75em 0; }
-    .msg-body p:last-child { margin-bottom: 0; }
-    .msg-body strong { font-weight: 600; color: inherit; }
-    .msg-body ul, .msg-body ol { margin: 0.5em 0 0.75em 1.25em; }
-    .msg-body li { margin-bottom: 0.35em; }
-    .msg-body h3, .msg-body h4 {
-      font-size: 0.95rem; font-weight: 600;
-      margin: 0.75em 0 0.35em 0;
-    }
-    .meta {
-      background: #fff; border-radius: 8px; padding: 16px;
-      border: 1px solid #e2e8f0; box-shadow: 0 1px 3px #0000000a;
-    }
-    .meta h3 {
-      font-size: 0.8rem; color: #64748b;
-      text-transform: uppercase; margin-bottom: 8px;
-    }
-    .meta-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 8px;
-    }
-    .meta-item { font-size: 0.8rem; }
-    .meta-item strong { color: #64748b; }
-    .panel {
-      background: #fff; border-radius: 8px; margin-top: 12px;
-      border: 1px solid #e2e8f0; box-shadow: 0 1px 3px #0000000a;
-    }
-    .panel summary {
-      padding: 12px 16px; cursor: pointer; font-weight: 600;
-      font-size: 0.85rem; color: #334155; list-style: none;
-    }
-    .panel summary::-webkit-details-marker { display: none; }
-    .panel summary::before { content: '▸ '; color: #64748b; }
-    .panel[open] summary::before { content: '▾ '; }
-    .panel-body {
-      padding: 0 16px 16px; font-size: 0.85rem; line-height: 1.6;
-      color: #334155; max-height: 420px; overflow-y: auto;
-      border-top: 1px solid #f1f5f9;
-    }
-    .panel-body .field { margin-bottom: 12px; }
-    .panel-body .field-label {
-      font-weight: 600; color: #64748b; font-size: 0.75rem;
-      text-transform: uppercase; letter-spacing: 0.04em;
-      margin-bottom: 4px;
-    }
-    .rules-body { font-size: 0.82rem; }
-    .empty, .loading {
-      color: #94a3b8; text-align: center;
-      padding: 60px 20px; font-size: 0.9rem;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conversation Data Review</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d26;
+    --surface2: #222535;
+    --border: #2e3148;
+    --accent: #6c8ef5;
+    --accent2: #a78bfa;
+    --text: #e2e8f0;
+    --muted: #8892a4;
+    --chat-user: #1e3a5f;
+    --chat-agent: #1e2d1e;
+    --tag-grounded: #14532d;
+    --tag-ungrounded: #1e3a5f;
+    --tag-identity: #3b1f5e;
+    --tag-chat: #1c3050;
+    --tag-voice: #501c1c;
+    --font: 'Inter', system-ui, sans-serif;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  header h1 { font-size: 16px; font-weight: 600; letter-spacing: 0.02em; }
+  header .stats { font-size: 13px; color: var(--muted); }
+
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 16px 12px;
+  }
+
+  .filter-section { margin-bottom: 20px; }
+  .filter-section h3 {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .filter-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    user-select: none;
+    transition: background 0.12s;
+  }
+  .filter-option:hover { background: var(--surface2); }
+  .filter-option input[type=checkbox] { accent-color: var(--accent); width: 14px; height: 14px; }
+  .filter-option .count { margin-left: auto; font-size: 11px; color: var(--muted); }
+
+  .reset-btn {
+    width: 100%;
+    padding: 7px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+    margin-bottom: 16px;
+    transition: background 0.12s, color 0.12s;
+  }
+  .reset-btn:hover { background: var(--surface2); color: var(--text); }
+
+  /* ── List ── */
+  .list-panel {
+    width: 320px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .list-header {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--muted);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .search-box {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .search-box input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+  }
+  .search-box input::placeholder { color: var(--muted); }
+  .search-box input:focus { border-color: var(--accent); }
+
+  .list-scroll { overflow-y: auto; flex: 1; }
+
+  .conv-card {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.1s;
+    position: relative;
+  }
+  .conv-card:hover { background: var(--surface2); }
+  .conv-card.active { background: var(--surface2); border-left: 3px solid var(--accent); }
+
+  .card-top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 5px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .tag-grounded { background: var(--tag-grounded); color: #86efac; }
+  .tag-ungrounded { background: var(--tag-ungrounded); color: #93c5fd; }
+  .tag-identity { background: var(--tag-identity); color: #c4b5fd; }
+  .tag-chat { background: var(--tag-chat); color: #7dd3fc; }
+  .tag-voice { background: var(--tag-voice); color: #fca5a5; }
+  .tag-lsw { background: #3d2e10; color: #fcd34d; }
+
+  .card-lang { font-size: 13px; font-weight: 600; }
+  .card-dialect { font-size: 11px; color: var(--muted); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-meta { font-size: 11px; color: var(--muted); display: flex; gap: 10px; }
+
+  /* ── Viewer ── */
+  .viewer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .viewer-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    background: var(--surface);
+  }
+
+  .viewer-header .vh-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+
+  .vh-title { font-size: 15px; font-weight: 600; }
+  .vh-meta { font-size: 12px; color: var(--muted); display: flex; gap: 16px; flex-wrap: wrap; }
+  .vh-meta span b { color: var(--text); }
+
+  .viewer-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--muted);
+    gap: 8px;
+  }
+  .empty-state svg { opacity: 0.3; }
+  .empty-state p { font-size: 14px; }
+
+  .turn {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 14px;
+    max-width: 720px;
+  }
+
+  .turn.user { align-items: flex-end; }
+  .turn.assistant { align-items: flex-start; }
+
+  .turn-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .turn-bubble {
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-width: 600px;
+  }
+
+  .turn.user .turn-bubble {
+    background: var(--chat-user);
+    border-bottom-right-radius: 4px;
+  }
+
+  .turn.assistant .turn-bubble {
+    background: var(--chat-agent);
+    border-bottom-left-radius: 4px;
+  }
+
+  .turn-switch-badge {
+    font-size: 10px;
+    background: #3d2e10;
+    color: #fcd34d;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-bottom: 4px;
+  }
+
+  .scenario-block {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .scenario-block b { color: var(--text); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .loading {
+    display: flex; align-items: center; justify-content: center;
+    height: 100%; font-size: 14px; color: var(--muted);
+  }
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1>Dialect × Education Review</h1>
-    <div class="subtitle" id="subtitle">Loading...</div>
 
-    <div class="controls">
-      <div class="control">
-        <label>Language</label>
-        <select id="lang"></select>
-      </div>
-      <div class="control">
-        <label>Dialect</label>
-        <select id="dialect"></select>
-      </div>
-      <div class="control">
-        <label>Education Tier</label>
-        <select id="tier"></select>
-      </div>
-      <div class="control">
-        <label>Lang Switch</label>
-        <select id="filter-lang-switch">
-          <option value="all">All</option>
-          <option value="yes">Yes</option>
-          <option value="no">No</option>
-        </select>
-      </div>
-      <div class="control">
-        <label>Topic Switch</label>
-        <select id="filter-topic-switch">
-          <option value="all">All</option>
-          <option value="yes">Yes</option>
-          <option value="no">No</option>
-        </select>
-      </div>
-      <div class="control">
-        <label>Grounded</label>
-        <select id="filter-grounded">
-          <option value="all">All</option>
-          <option value="yes">Yes</option>
-          <option value="no">No</option>
-        </select>
-      </div>
-      <div class="control">
-        <label>Sample</label>
-        <select id="sample"></select>
-      </div>
+<header>
+  <h1>Conversation Data Review</h1>
+  <span class="stats" id="headerStats">Loading…</span>
+</header>
+
+<div class="main">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="loading">Loading…</div>
+  </aside>
+
+  <!-- List -->
+  <div class="list-panel">
+    <div class="list-header">
+      <span id="listCount">0 conversations</span>
     </div>
-
-    <div class="chat" id="chat">
-      <div class="loading">Loading conversations...</div>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search dialect, intent, occupation…">
     </div>
-
-    <div class="meta" id="meta"></div>
-    <div id="scenario-panel"></div>
-    <div id="rules-panel"></div>
+    <div class="list-scroll" id="listScroll"></div>
   </div>
 
-  <script>
-    let DATA = [];
-    let RULES = {};
+  <!-- Viewer -->
+  <div class="viewer">
+    <div class="viewer-header" id="viewerHeader" style="display:none">
+      <div class="vh-top" id="viewerTags"></div>
+      <div class="vh-meta" id="viewerMeta"></div>
+    </div>
+    <div class="viewer-scroll" id="viewerScroll">
+      <div class="empty-state">
+        <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path d="M8 9h8M8 13h5M3 6a2 2 0 012-2h14a2 2 0 012 2v9a2 2 0 01-2 2H7l-4 4V6z"/>
+        </svg>
+        <p>Select a conversation to read it</p>
+      </div>
+    </div>
+  </div>
 
-    function escapeHtml(text) {
-      return String(text)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+</div>
+
+<script>
+const base = (() => {
+  const p = location.pathname;
+  return p.endsWith('/') ? p : p + '/';
+})();
+
+let allConvs = [];
+let filtered = [];
+let activeIdx = -1;
+let filterState = {};
+
+// ─── Load data ──────────────────────────────────────────────────────────────
+fetch(base + 'data.json')
+  .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(data => init(data))
+  .catch(err => {
+    document.getElementById('sidebar').innerHTML = `<div style="color:#f87171;padding:16px;font-size:13px">Failed to load data.json:<br>${err}</div>`;
+  });
+
+function init(data) {
+  const { meta, conversations } = data;
+  globalMeta = meta;
+  allConvs = conversations;
+
+  document.getElementById('headerStats').textContent =
+    `${meta.total} conversations · ${meta.languages.length} languages`;
+
+  // seed filterState
+  filterState = {
+    conv_type: new Set(meta.conv_types),
+    mode: new Set(meta.modes),
+    language: new Set(meta.languages),
+    dialect: new Set(),  // computed from selected languages
+    education: new Set(meta.education_levels),
+    has_language_switch: new Set(['yes', 'no']),
+  };
+
+  buildSidebar(meta);
+  applyFilters();
+  setupSearch();
+}
+
+// ─── Sidebar ────────────────────────────────────────────────────────────────
+function buildSidebar(meta) {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.innerHTML = '';
+
+  const resetBtn = document.createElement('button');
+  resetBtn.className = 'reset-btn';
+  resetBtn.textContent = 'Reset all filters';
+  resetBtn.onclick = () => {
+    sidebar.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = true);
+    syncFilterState();
+    applyFilters();
+  };
+  sidebar.appendChild(resetBtn);
+
+  const sections = [
+    { key: 'conv_type', label: 'Type', values: meta.conv_types },
+    { key: 'mode', label: 'Mode', values: meta.modes },
+    { key: 'language', label: 'Language', values: meta.languages },
+    { key: 'education', label: 'Education', values: meta.education_levels },
+    { key: 'has_language_switch', label: 'Language Switch', values: ['yes', 'no'] },
+  ];
+
+  for (const { key, label, values } of sections) {
+    const sec = document.createElement('div');
+    sec.className = 'filter-section';
+    sec.dataset.filterKey = key;
+    const h3 = document.createElement('h3');
+    h3.textContent = label;
+    sec.appendChild(h3);
+
+    for (const val of values) {
+      const row = document.createElement('label');
+      row.className = 'filter-option';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = true;
+      cb.dataset.key = key;
+      cb.dataset.val = val;
+      cb.onchange = () => { syncFilterState(); applyFilters(); };
+      const span = document.createElement('span');
+      span.textContent = val;
+      const countSpan = document.createElement('span');
+      countSpan.className = 'count';
+      countSpan.dataset.countFor = `${key}::${val}`;
+      row.append(cb, span, countSpan);
+      sec.appendChild(row);
     }
 
-    /** Turn plain text + light markdown into safe HTML with paragraphs. */
-    function formatMessage(text) {
-      let s = escapeHtml(text.trim());
+    sidebar.appendChild(sec);
 
-      // **bold**
-      s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-      // *italic* (single asterisk, not already bold)
-      s = s.replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g, '<em>$1</em>');
+    // Dialect section — dynamically after language
+    if (key === 'language') {
+      const dialectSec = document.createElement('div');
+      dialectSec.className = 'filter-section';
+      dialectSec.id = 'dialectSection';
+      const dh3 = document.createElement('h3');
+      dh3.textContent = 'Dialect';
+      dialectSec.appendChild(dh3);
+      sidebar.appendChild(dialectSec);
+    }
+  }
 
-      // Split into paragraphs on blank lines
-      const blocks = s.split(/\n{2,}/);
-      const html = blocks.map(block => {
-        const lines = block.split('\n');
-        const parts = [];
-        let listItems = [];
-        let listOrdered = false;
+  rebuildDialectSection(meta);
+}
 
-        function flushList() {
-          if (!listItems.length) return;
-          const tag = listOrdered ? 'ol' : 'ul';
-          parts.push(`<${tag}>${listItems.map(li => `<li>${li}</li>`).join('')}</${tag}>`);
-          listItems = [];
-        }
+function rebuildDialectSection(meta) {
+  const sec = document.getElementById('dialectSection');
+  if (!sec) return;
+  // Keep header
+  const h3 = sec.querySelector('h3');
+  sec.innerHTML = '';
+  sec.appendChild(h3);
 
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed) continue;
+  const selectedLangs = filterState.language;
+  const dialects = new Set();
+  for (const lang of selectedLangs) {
+    for (const d of (meta?.dialects_by_lang?.[lang] || [])) {
+      dialects.add(d);
+    }
+  }
 
-          const olMatch = trimmed.match(/^\d+\.\s+(.+)$/);
-          const ulMatch = trimmed.match(/^[-*•]\s+(.+)$/);
+  filterState.dialect = new Set(dialects);
 
-          if (olMatch) {
-            if (listItems.length && !listOrdered) flushList();
-            listOrdered = true;
-            listItems.push(olMatch[1]);
-          } else if (ulMatch) {
-            if (listItems.length && listOrdered) flushList();
-            listOrdered = false;
-            listItems.push(ulMatch[1]);
-          } else {
-            flushList();
-            if (/^#{1,3}\s+/.test(trimmed)) {
-              const heading = trimmed.replace(/^#{1,3}\s+/, '');
-              parts.push(`<h4>${heading}</h4>`);
-            } else {
-              parts.push(`<p>${trimmed}</p>`);
-            }
-          }
-        }
-        flushList();
-        return parts.join('');
-      }).join('');
+  for (const d of [...dialects].sort()) {
+    const row = document.createElement('label');
+    row.className = 'filter-option';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = true;
+    cb.dataset.key = 'dialect';
+    cb.dataset.val = d;
+    cb.onchange = () => { syncFilterState(); applyFilters(); };
+    const span = document.createElement('span');
+    span.textContent = d;
+    span.style.fontSize = '12px';
+    const countSpan = document.createElement('span');
+    countSpan.className = 'count';
+    countSpan.dataset.countFor = `dialect::${d}`;
+    row.append(cb, span, countSpan);
+    sec.appendChild(row);
+  }
+}
 
-      return `<div class="msg-body">${html || '<p></p>'}</div>`;
+// Store meta globally for dialect rebuild
+let globalMeta = null;
+const origInit = window.init;
+
+function syncFilterState() {
+  document.querySelectorAll('input[data-key]').forEach(cb => {
+    const { key, val } = cb.dataset;
+    if (!filterState[key]) filterState[key] = new Set();
+    if (cb.checked) filterState[key].add(val);
+    else filterState[key].delete(val);
+  });
+
+  // Update dialect section when language selection changes
+  if (globalMeta) {
+    rebuildDialectSection(globalMeta);
+    // Re-apply existing dialect checkbox state
+    document.querySelectorAll('input[data-key=dialect]').forEach(cb => {
+      if (filterState.dialect?.has(cb.dataset.val)) cb.checked = true;
+    });
+  }
+}
+
+// ─── Filtering ──────────────────────────────────────────────────────────────
+function matchesFilters(c) {
+  if (filterState.conv_type && !filterState.conv_type.has(c.conv_type)) return false;
+  if (filterState.mode && !filterState.mode.has(c.mode)) return false;
+  if (filterState.language && !filterState.language.has(c.language)) return false;
+  if (filterState.dialect?.size > 0 && !filterState.dialect.has(c.dialect)) return false;
+  if (filterState.education && !filterState.education.has(c.education)) return false;
+  const lswVal = c.has_language_switch ? 'yes' : 'no';
+  if (filterState.has_language_switch && !filterState.has_language_switch.has(lswVal)) return false;
+  return true;
+}
+
+function matchesSearch(c, query) {
+  if (!query) return true;
+  const q = query.toLowerCase();
+  return (
+    c.dialect?.toLowerCase().includes(q) ||
+    c.language?.toLowerCase().includes(q) ||
+    c.intent?.toLowerCase().includes(q) ||
+    c.life_sphere?.toLowerCase().includes(q) ||
+    c.occupation?.toLowerCase().includes(q) ||
+    c.state?.toLowerCase().includes(q) ||
+    c.education?.toLowerCase().includes(q)
+  );
+}
+
+function applyFilters() {
+  const query = document.getElementById('searchInput')?.value || '';
+  filtered = allConvs.filter(c => matchesFilters(c) && matchesSearch(c, query));
+  renderList();
+  updateCounts();
+  if (activeIdx >= 0 && activeIdx < filtered.length) {
+    renderViewer(filtered[activeIdx]);
+  } else {
+    activeIdx = -1;
+    clearViewer();
+  }
+}
+
+// ─── List ───────────────────────────────────────────────────────────────────
+function renderList() {
+  const scroll = document.getElementById('listScroll');
+  document.getElementById('listCount').textContent =
+    `${filtered.length} conversation${filtered.length !== 1 ? 's' : ''}`;
+
+  if (filtered.length === 0) {
+    scroll.innerHTML = '<div style="padding:20px;color:var(--muted);font-size:13px;text-align:center">No matches</div>';
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+  filtered.forEach((c, i) => {
+    const card = document.createElement('div');
+    card.className = 'conv-card' + (i === activeIdx ? ' active' : '');
+    card.onclick = () => selectConv(i);
+
+    const top = document.createElement('div');
+    top.className = 'card-top';
+    top.innerHTML = `
+      <span class="tag tag-${c.conv_type}">${c.conv_type}</span>
+      <span class="tag tag-${c.mode}">${c.mode}</span>
+      ${c.has_language_switch ? '<span class="tag tag-lsw">L-switch</span>' : ''}
+    `;
+
+    const lang = document.createElement('div');
+    lang.className = 'card-lang';
+    lang.textContent = c.language;
+
+    const dialect = document.createElement('div');
+    dialect.className = 'card-dialect';
+    dialect.textContent = c.dialect || '—';
+
+    const meta = document.createElement('div');
+    meta.className = 'card-meta';
+    meta.innerHTML = `<span>${c.education || '—'}</span><span>${c.turns_used} turns</span>`;
+
+    card.append(top, lang, dialect, meta);
+    frag.appendChild(card);
+  });
+
+  scroll.innerHTML = '';
+  scroll.appendChild(frag);
+}
+
+function selectConv(i) {
+  activeIdx = i;
+  document.querySelectorAll('.conv-card').forEach((el, idx) => {
+    el.classList.toggle('active', idx === i);
+  });
+  renderViewer(filtered[i]);
+}
+
+// ─── Viewer ─────────────────────────────────────────────────────────────────
+function renderViewer(c) {
+  const header = document.getElementById('viewerHeader');
+  const tagsEl = document.getElementById('viewerTags');
+  const metaEl = document.getElementById('viewerMeta');
+  const scroll = document.getElementById('viewerScroll');
+
+  header.style.display = '';
+
+  tagsEl.innerHTML = `
+    <span class="tag tag-${c.conv_type}">${c.conv_type}</span>
+    <span class="tag tag-${c.mode}">${c.mode}</span>
+    ${c.has_language_switch ? '<span class="tag tag-lsw">Language Switch</span>' : ''}
+    <span class="vh-title">${c.language} · ${c.dialect || '—'}</span>
+  `;
+
+  metaEl.innerHTML = `
+    <span><b>Education:</b> ${c.education || '—'}</span>
+    <span><b>Age/Sex:</b> ${c.age || '—'} · ${c.sex || '—'}</span>
+    <span><b>Occupation:</b> ${c.occupation || '—'}</span>
+    <span><b>State:</b> ${c.state || '—'}</span>
+    <span><b>Topic:</b> ${c.life_sphere || c.intent || '—'}</span>
+    <span><b>Turns:</b> ${c.turns_used}</span>
+    ${c.identity_subtype ? `<span><b>Identity subtype:</b> ${c.identity_subtype}</span>` : ''}
+    ${c.orientation ? `<span><b>Orientation:</b> ${c.orientation}</span>` : ''}
+  `;
+
+  scroll.innerHTML = '';
+
+  // Language switches index for badge display
+  const lswMap = {};
+  if (c.language_switches) {
+    for (const [turnIdx, info] of Object.entries(c.language_switches)) {
+      lswMap[parseInt(turnIdx)] = info;
+    }
+  }
+
+  const turns = c.conversation || [];
+  turns.forEach((turn, i) => {
+    const wrapper = document.createElement('div');
+    wrapper.className = `turn ${turn.role}`;
+
+    const lsw = lswMap[i];
+    if (lsw) {
+      const badge = document.createElement('div');
+      badge.className = 'turn-switch-badge';
+      badge.textContent = `↳ Language switch → ${lsw.lang}${lsw.is_switch_back ? ' (switch back)' : ''}`;
+      wrapper.appendChild(badge);
     }
 
-    function formatList(items) {
-      if (!items || !items.length) return '';
-      if (typeof items[0] === 'string') {
-        return '<ul>' + items.map(i => `<li>${escapeHtml(i)}</li>`).join('') + '</ul>';
-      }
-      return '<ul>' + items.map(i => {
-        const text = typeof i === 'object' ? JSON.stringify(i) : String(i);
-        return `<li>${escapeHtml(text)}</li>`;
-      }).join('') + '</ul>';
+    const label = document.createElement('div');
+    label.className = 'turn-label';
+    label.textContent = turn.role === 'user' ? 'User' : 'Sarvam AI';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'turn-bubble';
+    bubble.textContent = turn.content || '';
+
+    wrapper.append(label, bubble);
+    scroll.appendChild(wrapper);
+  });
+
+  scroll.scrollTop = 0;
+}
+
+function clearViewer() {
+  document.getElementById('viewerHeader').style.display = 'none';
+  document.getElementById('viewerScroll').innerHTML = `
+    <div class="empty-state">
+      <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+        <path d="M8 9h8M8 13h5M3 6a2 2 0 012-2h14a2 2 0 012 2v9a2 2 0 01-2 2H7l-4 4V6z"/>
+      </svg>
+      <p>Select a conversation to read it</p>
+    </div>`;
+}
+
+// ─── Counts ─────────────────────────────────────────────────────────────────
+function updateCounts() {
+  const countMap = {};
+  allConvs.forEach(c => {
+    const groups = [
+      ['conv_type', c.conv_type],
+      ['mode', c.mode],
+      ['language', c.language],
+      ['dialect', c.dialect],
+      ['education', c.education],
+      ['has_language_switch', c.has_language_switch ? 'yes' : 'no'],
+    ];
+    for (const [k, v] of groups) {
+      const key = `${k}::${v}`;
+      countMap[key] = (countMap[key] || 0) + 1;
     }
+  });
 
-    function formatScenario(scenario) {
-      const emo = scenario.emotional_state || {};
-      const dyn = scenario.conversation_dynamics || {};
-      const emoLines = Object.entries(emo)
-        .filter(([, v]) => v != null && v !== '')
-        .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
-        .join('\n');
-      const dynLines = Object.entries(dyn)
-        .filter(([, v]) => v != null && v !== '')
-        .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
-        .join('\n');
+  document.querySelectorAll('[data-count-for]').forEach(el => {
+    const total = countMap[el.dataset.countFor] || 0;
+    el.textContent = total;
+  });
+}
 
-      let html = '';
-      const fields = [
-        ['Who you are', scenario.who_you_are],
-        ['Core context / problem', scenario.core_context],
-        ['History with this problem', scenario.history],
-      ];
-      for (const [label, val] of fields) {
-        if (val) html += `<div class="field"><div class="field-label">${label}</div>${formatMessage(val)}</div>`;
-      }
-      if (scenario.practical_constraints?.length) {
-        html += `<div class="field"><div class="field-label">Practical constraints</div>${formatList(scenario.practical_constraints)}</div>`;
-      }
-      if (scenario.success_criteria?.length) {
-        html += `<div class="field"><div class="field-label">Success criteria</div>${formatList(scenario.success_criteria)}</div>`;
-      }
-      if (emoLines) {
-        html += `<div class="field"><div class="field-label">Emotional state</div>${formatMessage(emoLines)}</div>`;
-      }
-      if (dynLines) {
-        html += `<div class="field"><div class="field-label">Conversation dynamics</div>${formatMessage(dynLines)}</div>`;
-      }
-      return html || '<p class="empty">No scenario details stored.</p>';
-    }
+// ─── Search ─────────────────────────────────────────────────────────────────
+function setupSearch() {
+  const input = document.getElementById('searchInput');
+  let timer;
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => applyFilters(), 200);
+  });
+}
 
-    async function init() {
-      document.getElementById('subtitle').textContent = 'Loading conversations...';
-      try {
-        const base = document.baseURI.replace(/\/[^/]*$/, '/');
-        const [dataResp, rulesResp] = await Promise.all([
-          fetch(base + 'data.json'),
-          fetch(base + 'rules_by_variety.json'),
-        ]);
-        DATA = await dataResp.json();
-        RULES = await rulesResp.json();
-      } catch (e) {
-        document.getElementById('subtitle').textContent = 'Failed to load data: ' + e.message;
-        return;
-      }
-      const nVar = new Set(DATA.map(c => c.language + '|' + c.variety_id)).size;
-      const nTiers = new Set(DATA.map(c => c.education_tier)).size;
-      document.getElementById('subtitle').textContent =
-        `${DATA.length} conversations · ${nVar} dialects · ${nTiers} education tiers`;
-      document.getElementById('chat').innerHTML = '';
-      // Wire up filter change handlers
-      document.getElementById('filter-lang-switch').onchange = () => populateLanguages();
-      document.getElementById('filter-topic-switch').onchange = () => populateLanguages();
-      document.getElementById('filter-grounded').onchange = () => populateLanguages();
-      populateLanguages();
-    }
-
-    function getFiltered() {
-      const ls = document.getElementById('filter-lang-switch').value;
-      const ts = document.getElementById('filter-topic-switch').value;
-      const gr = document.getElementById('filter-grounded').value;
-      return DATA.filter(c => {
-        if (ls === 'yes' && !c.has_language_switch) return false;
-        if (ls === 'no' && c.has_language_switch) return false;
-        if (ts === 'yes' && !c.has_topic_transition) return false;
-        if (ts === 'no' && c.has_topic_transition) return false;
-        if (gr === 'yes' && !c.is_grounded) return false;
-        if (gr === 'no' && c.is_grounded) return false;
-        return true;
-      });
-    }
-
-    function populateLanguages() {
-      const filtered = getFiltered();
-      const langs = [...new Set(filtered.map(c => c.language))].sort();
-      const sel = document.getElementById('lang');
-      const prev = sel.value;
-      sel.innerHTML = langs.map(l => `<option value="${l}">${l}</option>`).join('');
-      if (langs.includes(prev)) sel.value = prev;
-      sel.onchange = () => { populateDialects(); };
-      populateDialects();
-    }
-
-    function populateDialects() {
-      const filtered = getFiltered();
-      const lang = document.getElementById('lang').value;
-      const varieties = {};
-      filtered.filter(c => c.language === lang).forEach(c => { varieties[c.variety_id] = c.variety_name; });
-      const sel = document.getElementById('dialect');
-      const prev = sel.value;
-      sel.innerHTML = Object.entries(varieties)
-        .map(([id, name]) => `<option value="${id}">${name}</option>`).join('');
-      if (varieties[prev]) sel.value = prev;
-      sel.onchange = () => { populateTiers(); };
-      populateTiers();
-    }
-
-    function populateTiers() {
-      const filtered = getFiltered();
-      const lang = document.getElementById('lang').value;
-      const vid = document.getElementById('dialect').value;
-      const tiers = filtered.filter(c => c.language === lang && c.variety_id === vid)
-        .map(c => c.education_tier);
-      const order = ['low', 'mid', 'high'];
-      const available = order.filter(t => tiers.includes(t));
-      const sel = document.getElementById('tier');
-      const prev = sel.value;
-      sel.innerHTML = available.map(t => `<option value="${t}">${t}</option>`).join('');
-      if (available.includes(prev)) sel.value = prev;
-      sel.onchange = () => { populateSamples(); };
-      populateSamples();
-    }
-
-    function populateSamples() {
-      const filtered = getFiltered();
-      const lang = document.getElementById('lang').value;
-      const vid = document.getElementById('dialect').value;
-      const tier = document.getElementById('tier').value;
-      const slots = filtered.filter(c =>
-        c.language === lang && c.variety_id === vid && c.education_tier === tier
-      ).map(c => c.tier_slot ?? 0).sort((a, b) => a - b);
-      const sel = document.getElementById('sample');
-      sel.innerHTML = slots.length
-        ? slots.map(s => `<option value="${s}">#${s + 1}</option>`).join('')
-        : '<option value="">--</option>';
-      sel.onchange = render;
-      render();
-    }
-
-    function render() {
-      const lang = document.getElementById('lang').value;
-      const vid = document.getElementById('dialect').value;
-      const tier = document.getElementById('tier').value;
-      const slot = parseInt(document.getElementById('sample').value, 10) || 0;
-      const conv = DATA.find(c =>
-        c.language === lang && c.variety_id === vid &&
-        c.education_tier === tier && (c.tier_slot ?? 0) === slot
-      );
-
-      const chatEl = document.getElementById('chat');
-      const metaEl = document.getElementById('meta');
-      const scenarioEl = document.getElementById('scenario-panel');
-      const rulesEl = document.getElementById('rules-panel');
-
-      if (!conv) {
-        chatEl.innerHTML = '<div class="empty">No conversation found for this combination.</div>';
-        metaEl.innerHTML = '';
-        scenarioEl.innerHTML = '';
-        rulesEl.innerHTML = '';
-        return;
-      }
-
-      chatEl.innerHTML = conv.conversation.map(msg => {
-        const roleLabel = msg.role === 'user'
-          ? `User (${escapeHtml(conv.variety_name)})`
-          : 'AI Assistant';
-        return `
-        <div class="msg ${msg.role}">
-          <div class="bubble">
-            <div class="role-tag">${roleLabel}</div>
-            ${formatMessage(msg.content)}
-          </div>
-        </div>`;
-      }).join('');
-
-      const emo = conv.scenario.emotional_state || {};
-      const lsEntries = Object.entries(conv.language_switches || {});
-      const lsText = lsEntries.length
-        ? lsEntries.filter(([,v]) => !v.is_switch_back).map(([t,v]) => `turn ${t} → ${v.lang}`).join(', ')
-        : 'None';
-      const ttList = conv.topic_transitions || [];
-      const ttText = ttList.length
-        ? ttList.map(t => `${t.trigger_turn_range || ''}: ${t.from_topic || ''} → ${t.to_topic || ''}`).join('; ')
-        : 'None';
-      metaEl.innerHTML = `
-        <h3>Scenario & Persona</h3>
-        <div class="meta-grid">
-          <div class="meta-item"><strong>Variety:</strong> ${escapeHtml(conv.variety_name)}</div>
-          <div class="meta-item"><strong>Tier:</strong> ${escapeHtml(conv.education_tier_label)} (sample #${(conv.tier_slot ?? 0) + 1})</div>
-          <div class="meta-item"><strong>Persona:</strong> ${escapeHtml(conv.sex)} · ${escapeHtml(conv.occupation)}</div>
-          <div class="meta-item"><strong>Education:</strong> ${escapeHtml(conv.education_level)}</div>
-          <div class="meta-item"><strong>Location:</strong> ${escapeHtml(conv.zone)}, ${escapeHtml(conv.state)}</div>
-          <div class="meta-item"><strong>Life sphere:</strong> ${escapeHtml(conv.life_sphere)}</div>
-          <div class="meta-item"><strong>Intent:</strong> ${escapeHtml(conv.intent)}</div>
-          <div class="meta-item"><strong>Emotion:</strong> ${escapeHtml(emo.primary_emotion || '')} (${escapeHtml(emo.intensity || '')})</div>
-          <div class="meta-item"><strong>Lang switch:</strong> ${escapeHtml(lsText)}</div>
-          <div class="meta-item"><strong>Topic transitions:</strong> ${escapeHtml(ttText)}</div>
-          <div class="meta-item"><strong>Grounded:</strong> ${conv.is_grounded
-            ? escapeHtml((conv.grounding.sub_category || '') + ' / ' + (conv.grounding.book_name || ''))
-            : 'No'}</div>
-        </div>
-      `;
-
-      scenarioEl.innerHTML = `
-        <details class="panel" open>
-          <summary>Scenario description</summary>
-          <div class="panel-body">${formatScenario(conv.scenario || {})}</div>
-        </details>`;
-
-      const rulesKey = `${conv.language}|${conv.variety_id}`;
-      const rulesText = RULES[rulesKey] || '';
-      rulesEl.innerHTML = `
-        <details class="panel" open>
-          <summary>Dialect rules — ${escapeHtml(conv.variety_name)}</summary>
-          <div class="panel-body rules-body">${
-            rulesText ? formatMessage(rulesText) : '<p class="empty">No rules found for this variety.</p>'
-          }</div>
-        </details>`;
-    }
-
-    init();
-  </script>
+</script>
 </body>
 </html>
