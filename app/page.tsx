@@ -18,11 +18,14 @@ interface Conversation {
   conv_type: string;
   language: string;
   dialect: string;
+  dialect_id: string;
   mode: string;
   education: string;
+  education_tier: string;
   life_sphere: string;
   intent: string;
   has_language_switch: boolean;
+  has_topic_switch: boolean;
   language_switches: Record<string, LangSwitch>;
   turns_used: number;
   age: string | number;
@@ -51,6 +54,8 @@ interface LangData {
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
+
+const BASE = '/conversation-review';
 
 const TYPE_COLORS: Record<string, string> = {
   grounded: 'bg-emerald-900/60 text-emerald-300',
@@ -136,6 +141,9 @@ function ConvCard({
         {conv.has_language_switch && (
           <Tag label="L-switch" color="bg-amber-900/60 text-amber-300" />
         )}
+        {conv.has_topic_switch && (
+          <Tag label="T-switch" color="bg-teal-900/60 text-teal-300" />
+        )}
       </div>
       <div className="text-sm font-semibold text-slate-200 truncate">{conv.dialect || conv.language}</div>
       <div className="text-xs text-slate-500 mt-0.5 flex gap-3">
@@ -156,7 +164,7 @@ function Viewer({ conv }: { conv: Conversation | null }) {
         <svg width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
           <path d="M8 9h8M8 13h5M3 6a2 2 0 012-2h14a2 2 0 012 2v9a2 2 0 01-2 2H7l-4 4V6z" />
         </svg>
-        <p className="text-sm">Select a conversation</p>
+        <p className="text-sm">Select a conversation from the left</p>
       </div>
     );
   }
@@ -172,12 +180,12 @@ function Viewer({ conv }: { conv: Conversation | null }) {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Header */}
       <div className="px-6 py-4 border-b border-[#1e2130] bg-[#13151f] flex-shrink-0">
         <div className="flex gap-2 flex-wrap items-center mb-2">
           <Tag label={conv.conv_type} color={TYPE_COLORS[conv.conv_type] ?? 'bg-slate-700 text-slate-300'} />
           <Tag label={conv.mode} color={MODE_COLORS[conv.mode] ?? 'bg-slate-700 text-slate-300'} />
           {conv.has_language_switch && <Tag label="Language Switch" color="bg-amber-900/60 text-amber-300" />}
+          {conv.has_topic_switch && <Tag label="Topic Switch" color="bg-teal-900/60 text-teal-300" />}
           <span className="text-base font-semibold text-slate-100 ml-1">
             {conv.language} · {conv.dialect}
           </span>
@@ -192,13 +200,15 @@ function Viewer({ conv }: { conv: Conversation | null }) {
           {conv.identity_subtype && (
             <span><b className="text-slate-400">Subtype:</b> {conv.identity_subtype}</span>
           )}
+          {conv.identity_category && (
+            <span><b className="text-slate-400">Category:</b> {conv.identity_category}</span>
+          )}
           {conv.orientation && (
             <span><b className="text-slate-400">Orientation:</b> {conv.orientation}</span>
           )}
         </div>
       </div>
 
-      {/* Turns */}
       <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
         {conv.conversation.map((turn, i) => {
           const lsw = lswMap[i];
@@ -240,23 +250,21 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<Conversation | null>(null);
 
-  // Filters — all empty = "all"
   const [filterLang, setFilterLang] = useState('');
   const [filterDialect, setFilterDialect] = useState('');
   const [filterType, setFilterType] = useState('');
   const [filterMode, setFilterMode] = useState('');
   const [filterEdu, setFilterEdu] = useState('');
   const [filterLsw, setFilterLsw] = useState('');
+  const [filterTsw, setFilterTsw] = useState('');
 
-  // Load index on mount
   useEffect(() => {
-    fetch('/data/index.json')
+    fetch(`${BASE}/data/index.json`)
       .then((r) => r.json())
       .then(setIndex)
       .catch(console.error);
   }, []);
 
-  // Load per-language data when language is selected
   useEffect(() => {
     if (!filterLang) {
       setLangData(null);
@@ -268,16 +276,15 @@ export default function Page() {
     setFilterDialect('');
     setSelected(null);
     const slug = filterLang.toLowerCase().replace(/\s+/g, '_');
-    fetch(`/data/${slug}.json`)
+    fetch(`${BASE}/data/${slug}.json`)
       .then((r) => r.json())
-      .then((d) => { setLangData(d); setLoading(false); })
+      .then((d: LangData) => { setLangData(d); setLoading(false); })
       .catch(() => setLoading(false));
   }, [filterLang]);
 
-  // Reset selected conversation when filters change
   useEffect(() => {
     setSelected(null);
-  }, [filterDialect, filterType, filterMode, filterEdu, filterLsw]);
+  }, [filterDialect, filterType, filterMode, filterEdu, filterLsw, filterTsw]);
 
   const filtered = useMemo(() => {
     if (!langData) return [];
@@ -288,91 +295,131 @@ export default function Page() {
       if (filterEdu && c.education !== filterEdu) return false;
       if (filterLsw === 'yes' && !c.has_language_switch) return false;
       if (filterLsw === 'no' && c.has_language_switch) return false;
+      if (filterTsw === 'yes' && !c.has_topic_switch) return false;
+      if (filterTsw === 'no' && c.has_topic_switch) return false;
       return true;
     });
-  }, [langData, filterDialect, filterType, filterMode, filterEdu, filterLsw]);
+  }, [langData, filterDialect, filterType, filterMode, filterEdu, filterLsw, filterTsw]);
 
-  const dialectOptions = (langData?.dialects ?? []).map((d) => ({ value: d, label: d }));
+  const dialectOptions = useMemo(() =>
+    (langData?.dialects ?? []).map((d) => ({ value: d, label: d })),
+    [langData]
+  );
+
+  const eduOptions = useMemo(() => {
+    if (!langData) return [];
+    const levels = [...new Set(langData.conversations.map((c) => c.education).filter(Boolean))];
+    levels.sort();
+    return levels.map((v) => ({ value: v, label: v }));
+  }, [langData]);
+
   const typeOptions = ['grounded', 'ungrounded', 'identity'].map((v) => ({ value: v, label: v }));
   const modeOptions = ['chat', 'voice'].map((v) => ({ value: v, label: v }));
-  const eduOptions = (index?.education_levels ?? []).map((v) => ({ value: v, label: v }));
-  const lswOptions = [
+  const yesNoOptions = [
     { value: 'yes', label: 'Yes' },
     { value: 'no', label: 'No' },
   ];
   const langOptions = (index?.languages ?? []).map((l) => ({ value: l, label: l }));
 
+  const hasAnyFilter = filterDialect || filterType || filterMode || filterEdu || filterLsw || filterTsw;
+
+  function clearFilters() {
+    setFilterDialect('');
+    setFilterType('');
+    setFilterMode('');
+    setFilterEdu('');
+    setFilterLsw('');
+    setFilterTsw('');
+  }
+
   return (
     <div className="flex flex-col h-screen overflow-hidden">
-      {/* Top bar */}
-      <header className="flex items-end gap-4 px-6 py-4 border-b border-[#1e2130] bg-[#13151f] flex-shrink-0 flex-wrap">
-        <div className="mr-2">
-          <div className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-1">
-            Conversation Review
+      <header className="px-6 py-4 border-b border-[#1e2130] bg-[#13151f] flex-shrink-0">
+        <div className="flex items-end gap-4 flex-wrap">
+          <div className="mr-2">
+            <div className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-1">
+              Sarvam Chat Data Review
+            </div>
+            <div className="text-[11px] text-slate-600">
+              {index ? `${index.total.toLocaleString()} sampled conversations` : 'Loading…'}
+            </div>
           </div>
-          <div className="text-[11px] text-slate-600">
-            {index ? `${index.total.toLocaleString()} total` : 'Loading…'}
+
+          <Select
+            label="Language"
+            value={filterLang}
+            options={langOptions}
+            onChange={(v) => setFilterLang(v)}
+            placeholder="Pick a language"
+          />
+          <Select
+            label="Dialect"
+            value={filterDialect}
+            options={dialectOptions}
+            onChange={(v) => setFilterDialect(v)}
+            disabled={!langData}
+            placeholder="All dialects"
+          />
+          <Select
+            label="Type"
+            value={filterType}
+            options={typeOptions}
+            onChange={(v) => setFilterType(v)}
+            placeholder="All types"
+          />
+          <Select
+            label="Mode"
+            value={filterMode}
+            options={modeOptions}
+            onChange={(v) => setFilterMode(v)}
+            placeholder="All modes"
+          />
+          <Select
+            label="Education"
+            value={filterEdu}
+            options={eduOptions}
+            onChange={(v) => setFilterEdu(v)}
+            disabled={!langData}
+            placeholder="All levels"
+          />
+          <Select
+            label="Lang Switch"
+            value={filterLsw}
+            options={yesNoOptions}
+            onChange={(v) => setFilterLsw(v)}
+            placeholder="Any"
+          />
+          <Select
+            label="Topic Switch"
+            value={filterTsw}
+            options={yesNoOptions}
+            onChange={(v) => setFilterTsw(v)}
+            placeholder="Any"
+          />
+
+          <div className="flex flex-col items-end gap-1 ml-auto self-end pb-1">
+            {filterLang && (
+              <div className="text-sm text-slate-400">
+                {loading ? 'Loading…' : `${filtered.length} conversation${filtered.length !== 1 ? 's' : ''}`}
+              </div>
+            )}
+            {hasAnyFilter && (
+              <button
+                onClick={clearFilters}
+                className="text-[10px] uppercase tracking-wide text-indigo-400 hover:text-indigo-300"
+              >
+                Clear filters
+              </button>
+            )}
           </div>
         </div>
-
-        <Select
-          label="Language"
-          value={filterLang}
-          options={langOptions}
-          onChange={(v) => setFilterLang(v)}
-          placeholder="Pick a language"
-        />
-        <Select
-          label="Dialect"
-          value={filterDialect}
-          options={dialectOptions}
-          onChange={(v) => setFilterDialect(v)}
-          disabled={!langData}
-          placeholder="All dialects"
-        />
-        <Select
-          label="Type"
-          value={filterType}
-          options={typeOptions}
-          onChange={(v) => setFilterType(v)}
-          placeholder="All types"
-        />
-        <Select
-          label="Mode"
-          value={filterMode}
-          options={modeOptions}
-          onChange={(v) => setFilterMode(v)}
-          placeholder="All modes"
-        />
-        <Select
-          label="Education"
-          value={filterEdu}
-          options={eduOptions}
-          onChange={(v) => setFilterEdu(v)}
-          placeholder="All levels"
-        />
-        <Select
-          label="Lang Switch"
-          value={filterLsw}
-          options={lswOptions}
-          onChange={(v) => setFilterLsw(v)}
-          placeholder="Any"
-        />
-
-        {filterLang && (
-          <div className="ml-auto text-sm text-slate-400 self-end pb-2">
-            {loading ? 'Loading…' : `${filtered.length} conversation${filtered.length !== 1 ? 's' : ''}`}
-          </div>
-        )}
       </header>
 
-      {/* Body: list + viewer */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Conversation list */}
         <div className="w-[300px] flex-shrink-0 border-r border-[#1e2130] overflow-y-auto">
           {!filterLang ? (
             <div className="p-6 text-sm text-slate-600 text-center mt-8">
-              Select a language to start
+              Pick a language to start exploring
             </div>
           ) : loading ? (
             <div className="p-6 text-sm text-slate-600 text-center mt-8">Loading…</div>
@@ -390,7 +437,6 @@ export default function Page() {
           )}
         </div>
 
-        {/* Viewer */}
         <div className="flex-1 overflow-hidden">
           <Viewer conv={selected} />
         </div>
