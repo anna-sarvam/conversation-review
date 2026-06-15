@@ -56,6 +56,7 @@ interface LangData {
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
 const BASE = '/conversation-review';
+const DATA_VERSION = '20260615-v2';
 
 const TYPE_COLORS: Record<string, string> = {
   grounded: 'bg-emerald-900/60 text-emerald-300',
@@ -259,7 +260,7 @@ export default function Page() {
   const [filterTsw, setFilterTsw] = useState('');
 
   useEffect(() => {
-    fetch(`${BASE}/data/index.json`)
+    fetch(`${BASE}/data/index.json?v=${DATA_VERSION}`, { cache: 'no-store' })
       .then((r) => r.json())
       .then(setIndex)
       .catch(console.error);
@@ -276,7 +277,7 @@ export default function Page() {
     setFilterDialect('');
     setSelected(null);
     const slug = filterLang.toLowerCase().replace(/\s+/g, '_');
-    fetch(`${BASE}/data/${slug}.json`)
+    fetch(`${BASE}/data/${slug}.json?v=${DATA_VERSION}`, { cache: 'no-store' })
       .then((r) => r.json())
       .then((d: LangData) => { setLangData(d); setLoading(false); })
       .catch(() => setLoading(false));
@@ -341,7 +342,7 @@ export default function Page() {
               Sarvam Chat Data Review
             </div>
             <div className="text-[11px] text-slate-600">
-              {index ? `${index.total.toLocaleString()} sampled conversations` : 'Loading…'}
+              {index ? `${index.total.toLocaleString()} conversations · ${index.languages.length} languages` : 'Loading…'}
             </div>
           </div>
 
